@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c4231">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="麻将算分">
+<meta name="format-detection" content="telephone=no">
+<title>长沙麻将算分器</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --green:#0d4b36; --green2:#0a3a2a; --ivory:#faf7ee; --line:#e3dcc9;
+  --red:#c0392f; --red2:#8e2a22; --gold:#d9b36a; --ink:#2a2a24; --muted:#8a8375;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(120% 90% at 50% 0%, #12604a 0%, #0c4231 45%, #092e22 100%);
+  background-attachment:fixed;
+  color:var(--ivory);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  min-height:100vh; -webkit-font-smoothing:antialiased;
+}
+header{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:center; gap:10px;
+  padding:calc(8px + env(safe-area-inset-top)) 14px 8px;
+  background:rgba(9,40,30,.92); backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(217,179,106,.22);
+}
+header .tile{
+  width:38px;height:38px;border-radius:9px;flex:0 0 auto;
+  background:linear-gradient(#fffdf6,#f0e9d6); color:var(--red);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:800;
+  box-shadow:0 3px 0 #c9bfa5, inset 0 0 0 2px #fff;
+}
+header h1{font-size:17px;margin:0;color:#f3e9cf;letter-spacing:.5px}
+header .sub{font-size:11px;color:#9ab5a8;margin-top:2px}
+main{max-width:560px;margin:0 auto;padding:12px 12px calc(96px + env(safe-area-inset-bottom))}
+section[data-tab]{display:none}
+section[data-tab].on{display:block}
+.card{
+  background:var(--ivory); color:var(--ink);
+  border-radius:14px; padding:12px; margin-bottom:12px;
+  box-shadow:0 2px 0 rgba(0,0,0,.30), 0 8px 20px rgba(0,0,0,.22);
+}
+.cardTitle{font-size:13px;color:var(--muted);margin-bottom:9px;letter-spacing:.4px;font-weight:600}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pbtn{
+  font-size:20px;padding:15px 8px;border-radius:12px;font-weight:800;
+  border:2px solid #e0d8c6;background:linear-gradient(#fffdf8,#f6f1e3);color:var(--ink);
+  box-shadow:0 3px 0 #d8cfb8; font-family:inherit;
+}
+.pbtn.on{background:linear-gradient(#cd4a3c,#ab3227);border-color:#8e2a22;color:#fff;box-shadow:0 3px 0 #6f2019}
+.seg{display:flex;background:#efe9da;border-radius:12px;padding:4px;gap:4px}
+.seg button{
+  flex:1;padding:12px;border:0;border-radius:9px;background:transparent;
+  font-size:17px;font-weight:800;color:var(--muted);font-family:inherit;
+}
+.seg button.on{background:#fff;color:var(--red);box-shadow:0 1px 5px rgba(0,0,0,.14)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{
+  flex:1 1 30%;min-width:92px;padding:9px 6px;border-radius:12px;
+  border:2px solid #e0d8c6;background:linear-gradient(#fffdf8,#f6f1e3);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-family:inherit;box-shadow:0 2px 0 #d8cfb8;
+}
+.chip b{font-size:19px;color:var(--ink)}
+.chip span{font-size:11px;color:var(--muted)}
+.chip.on{background:linear-gradient(#12604a,#0d4b36);border-color:#0a3a2a;box-shadow:0 2px 0 #082a1e}
+.chip.on b,.chip.on span{color:#fff}
+.chip.mini{flex:0 0 auto;min-width:0;padding:8px 12px;font-size:14px}
+.hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+details.helper{margin-top:10px;border-top:1px dashed var(--line);padding-top:9px}
+details.helper summary{font-size:13px;font-weight:700;color:#5c6b61;cursor:pointer;list-style:none}
+details.helper summary::-webkit-details-marker{display:none}
+details.helper summary:before{content:"▸ ";color:var(--green)}
+details.helper[open] summary:before{content:"▾ "}
+.kongHead{display:grid;grid-template-columns:1fr 96px 96px;gap:6px;font-size:12px;color:var(--muted);padding:0 0 6px;border-bottom:1px solid var(--line)}
+.kongHead div:nth-child(2),.kongHead div:nth-child(3){text-align:center}
+.kongRow{display:grid;grid-template-columns:1fr 96px 96px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kongRow:last-child{border-bottom:none}
+.kname{font-size:16px;font-weight:700}
+.stepper{display:flex;align-items:center;justify-content:center;background:#efe9da;border-radius:10px;overflow:hidden}
+.stepper button{width:32px;height:36px;border:0;background:transparent;font-size:19px;font-weight:800;color:var(--green);font-family:inherit;cursor:pointer}
+.stepper button:active{background:#e2dac5}
+.stepper b{min-width:26px;text-align:center;font-size:16px}
+.stepper.has{background:linear-gradient(#12604a,#0d4b36)}
+.stepper.has button{color:#fff}
+.stepper.has b{color:#fff}
+.preview{color:#cfe3d6;font-size:13px;line-height:1.6;margin:2px 4px 10px;min-height:20px}
+.preview .hl{color:#f3e9cf;font-weight:700}
+button.big{width:100%;font-family:inherit;border-radius:14px;cursor:pointer}
+button.primary{
+  padding:17px;border:0;font-size:20px;font-weight:800;letter-spacing:8px;color:#fff;
+  background:linear-gradient(#cd4a3c,#a62f24);box-shadow:0 4px 0 #752219;text-indent:8px;
+}
+button.primary:disabled{opacity:.45;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+button.ghost{
+  padding:12px;margin-top:10px;font-size:14px;color:#cfe3d6;
+  border:1.5px solid rgba(250,247,238,.35);background:transparent;
+}
+.tcard{
+  background:var(--ivory);color:var(--ink);border-radius:14px;padding:11px 13px;
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;
+  box-shadow:0 2px 0 rgba(0,0,0,.28), 0 6px 16px rgba(0,0,0,.2);
+}
+.tcard .tname{font-size:17px;font-weight:800}
+.tcard .tpts{font-size:12px;color:var(--muted);margin-top:2px}
+.tcard .tamt{font-size:21px;font-weight:800}
+.pos{color:#c0392f}.neg{color:#1d7a5f}.zero{color:#9a9488}
+.metaRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 12px;color:#cfe3d6;font-size:13px}
+.metaRow button{
+  font-family:inherit;font-size:13px;padding:8px 12px;border-radius:10px;cursor:pointer;
+  border:1.5px solid rgba(250,247,238,.35);background:rgba(9,40,30,.5);color:#e7dcc4;
+}
+.metaRow button:active{background:rgba(9,40,30,.9)}
+.handCard{
+  background:rgba(250,247,238,.08);border:1px solid rgba(217,179,106,.18);
+  border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px;line-height:1.6;
+}
+.handCard .hcTop{display:flex;justify-content:space-between;color:#f3e9cf;font-weight:700}
+.handCard .hcSub{color:#9ab5a8;font-size:12px;margin-top:1px}
+.setGroup{margin-bottom:6px}
+.setLabel{font-size:13px;color:var(--muted);font-weight:700;margin:10px 0 6px}
+.setInput{
+  width:100%;font-family:inherit;font-size:16px;padding:11px 12px;border-radius:10px;
+  border:2px solid #e0d8c6;background:#fffdf8;color:var(--ink);
+}
+.setRow{display:flex;gap:8px;flex-wrap:wrap}
+.setRow .setInput{flex:1;min-width:120px}
+.switchRow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line)}
+.switchRow:last-child{border-bottom:none}
+.switchRow .sl{font-size:15px;font-weight:700}
+.switchRow .sd{font-size:12px;color:var(--muted);margin-top:2px}
+.sw{
+  position:relative;width:52px;height:30px;border-radius:16px;background:#d5cdb8;
+  border:0;cursor:pointer;flex:0 0 auto;transition:background .15s;
+}
+.sw:after{content:"";position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw.on{background:var(--green)}
+.sw.on:after{left:24px}
+.rulesTable{width:100%;border-collapse:collapse;font-size:14px}
+.rulesTable th,.rulesTable td{padding:8px 4px;text-align:center;border-bottom:1px solid var(--line)}
+.rulesTable th{color:var(--muted);font-size:12px;font-weight:600}
+.rulesTable td.v{font-weight:800}
+.rulesTable td.y{color:var(--red);font-weight:700}
+.noteList{font-size:13.5px;line-height:1.8;color:#4a463c;margin:6px 0 0;padding-left:1.1em}
+.noteList li{margin-bottom:6px}
+.noteList b{color:var(--ink)}
+.kbd{display:inline-block;background:#efe9da;border-radius:6px;padding:0 6px;font-size:12px;font-weight:700;color:#5c6b61}
+nav.tabbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;
+  background:rgba(8,36,27,.97); backdrop-filter:blur(10px);
+  border-top:1px solid rgba(217,179,106,.24);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav.tabbar button{
+  flex:1;border:0;background:transparent;color:#8fa99c;font-family:inherit;
+  font-size:12px;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
+}
+nav.tabbar button .ic{font-size:19px;line-height:1}
+nav.tabbar button.on{color:#f3e9cf}
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.overlay.on{display:flex}
+.sheet{
+  width:100%;max-width:560px;background:var(--ivory);color:var(--ink);
+  border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+  max-height:84vh;overflow:auto;animation:up .18s ease-out;
+}
+@keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+.sheet h3{margin:0 0 10px;font-size:17px}
+.sheet .mrow{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}
+.sheet .mrow:last-of-type{border-bottom:none}
+.sheet .mrow .mname{font-weight:800}
+.sheet .mrow .mpts{font-size:12px;color:var(--muted)}
+.sheet .mrow .mamt{font-weight:800;font-size:17px;white-space:nowrap}
+.sheet .detail{background:#f2ecdc;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7;color:#4a463c;margin:10px 0;white-space:pre-wrap}
+.sheet .btnRow{display:flex;gap:10px;margin-top:12px}
+.sheet .btnRow button{
+  flex:1;padding:13px;border-radius:12px;border:0;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;
+}
+.sheet .btnCancel{background:#e7e0cd;color:#5c5gerger}
+.sheet .btnCancel{background:#e7e0cd;color:#5c5b50}
+.sheet .btnOk{background:linear-gradient(#cd4a3c,#a62f24);color:#fff;box-shadow:0 3px 0 #752219}
+.sheet .btnOk.danger{background:linear-gradient(#cd4a3c,#a62f24)}
+#toast{
+  position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);
+  background:rgba(20,24,20,.94);color:#f6f1e2;padding:10px 16px;border-radius:99px;
+  font-size:14px;z-index:80;opacity:0;pointer-events:none;transition:all .2s;max-width:86vw;text-align:center;
+}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.vfoot{text-align:center;color:#6f8a7c;font-size:11px;margin:24px 0 6px;line-height:1.7}
+</style>
+</head>
+<body>
+<header>
+  <div class="tile">胡</div>
+  <div>
+    <h1>长沙麻将算分器</h1>
+    <div class="sub" id="rateLabel">—</div>
+  </div>
+</header>
+
+<main>
+<!-- ============ 结算 ============ -->
+<section data-tab="settle" class="on">
+  <div class="card">
+    <div class="cardTitle">1 · 谁胡了（自摸）</div>
+    <div class="pgrid" id="winnerBtns"></div>
+  </div>
+
+  <div class="card">
+    <div class="cardTitle">2 · 胡型</div>
+    <div class="seg" id="kindSeg">
+      <button data-kind="small" class="on">小胡</button>
+      <button data-kind="big">大胡</button>
+    </div>
+    <div class="chips" id="tierChips"></div>
+    <details class="helper" id="helperBox" style="display:none">
+      <summary>按番型自动算（大胡叠加·算加法）</summary>
+      <div class="chips" id="bigTypeChips"></div>
+      <div class="hint" id="helperNote">勾选本局凑成的大胡番型，自动按加法累计。</div>
+    </details>
+    <div class="hint" id="tierNote"></div>
+  </div>
+
+  <div class="card">
+    <div class="cardTitle">3 · 杠牌（没有就跳过）</div>
+    <div class="kongHead"><div>玩家</div><div>明杠</div><div>暗杠</div></div>
+    <div id="kongRows"></div>
+    <div class="hint" id="kongNote"></div>
+  </div>
+
+  <div class="card" id="bankerCard" style="display:none">
+    <div class="switchRow" style="border:none;padding:2px 0">
+      <div><div class="sl">胡家是庄家</div><div class="sd">庄家自摸 ×2（已在你设置里开启）</div></div>
+      <button class="sw" id="bankerSw"></button>
+    </div>
+  </div>
+
+  <div class="preview" id="preview"></div>
+  <button class="big primary" id="btnSettle" disabled>结 算</button>
+  <button class="big ghost" id="btnDraw">流局 · 只结杠分</button>
+</section>
+
+<!-- ============ 记分 ============ -->
+<section data-tab="ledger">
+  <div id="totalsGrid"></div>
+  <div class="metaRow">
+    <span id="metaInfo">—</span>
+    <span style="flex:1"></span>
+    <button id="btnUndo">撤销上一局</button>
+    <button id="btnCopy">复制小结</button>
+    <button id="btnClear">结束清账</button>
+  </div>
+  <div id="handList"></div>
+  <div class="vfoot" id="ledgerFoot"></div>
+</section>
+
+<!-- ============ 规则 ============ -->
+<section data-tab="rules">
+  <div class="card">
+    <div class="cardTitle">本桌当前规则（按你的设置生成）</div>
+    <ul class="noteList" id="ruleSummary"></ul>
+  </div>
+  <div class="card">
+    <div class="cardTitle">分值 ⇄ 金额对照（自摸每家付）</div>
+    <table class="rulesTable" id="moneyTable"></table>
+  </div>
+  <div class="card">
+    <div class="cardTitle">规则口径说明</div>
+    <ul class="noteList">
+      <li><b>只准自摸</b>：所有和牌都是自摸，输的三家全付；本工具没有点炮算法。</li>
+      <li><b>算加法</b>：多个大胡分值相加。例：清一色＋杠上花＝2 个大胡＝16 分（不是翻倍）。</li>
+      <li><b>一杠到底</b>：杠按个数逐个加算，全部结算、不封顶（每个明杠、暗杠都照算）。</li>
+      <li><b>常规四版 / 打不过手 / 生番就能胡</b>：属于和牌合法性（过手、升番）的判定，不影响分数计算，本工具不参与判定，按你们桌规执行即可。</li>
+      <li><b>起手胡</b>（四喜、板板胡、缺一色、六六顺等）：按你们桌上的分值，直接在上一步选对档位即可。</li>
+      <li>分值、杠分、玩家名都可以在「设置」里改，实时生效。</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="cardTitle">怎么用</div>
+    <ul class="noteList">
+      <li>每打完一局：点胡家的人 → 点胡型分值 → 有杠就加减 → <b>结算</b> → 确认入账。</li>
+      <li>顶部「记分」看四家输赢总额；点错可以撤销上一局。</li>
+      <li>换场地、换人：到「设置」改名字；一桌打完点「结束清账」。</li>
+    </ul>
+  </div>
+  <div class="vfoot">长沙麻将算分器 · 离线可用 · 记录只存在这台手机里</div>
+</section>
+
+<!-- ============ 设置 ============ -->
+<section data-tab="settings">
+  <div class="card">
+    <div class="cardTitle">玩家名字（按座位）</div>
+    <div class="setRow" id="nameInputs"></div>
+  </div>
+  <div class="card">
+    <div class="cardTitle">分值设置</div>
+    <div class="setLabel">每分多少元（你打 5 毛 → 0.5）</div>
+    <input class="setInput" id="rateInput" inputmode="decimal">
+    <div class="setLabel">小胡档位（分/每家，英文逗号分隔）</div>
+    <input class="setInput" id="smallInput" inputmode="numeric">
+    <div class="setLabel">大胡档位（分/每家，英文逗号分隔）</div>
+    <input class="setInput" id="bigInput" inputmode="numeric">
+    <div class="setLabel">大胡每多一个加多少分（算加法）</div>
+    <input class="setInput" id="bigStepInput" inputmode="numeric">
+    <div class="hint">改完自动保存。若你们没有点「8、16、24、32」封顶，工具按 8×个数 一直加下去。</div>
+  </div>
+  <div class="card">
+    <div class="cardTitle">杠分设置（每家给，分）</div>
+    <div class="setRow">
+      <div style="flex:1">
+        <div class="setLabel">明杠</div>
+        <input class="setInput" id="kongMingInput" inputmode="decimal">
+      </div>
+      <div style="flex:1">
+        <div class="setLabel">暗杠</div>
+        <input class="setInput" id="kongAnInput" inputmode="decimal">
+      </div>
+    </div>
+    <div class="hint">默认：明杠每家 1 分（5毛）、暗杠每家 2 分（1块）。不对就改这里。</div>
+  </div>
+  <div class="card">
+    <div class="cardTitle">可选玩法</div>
+    <div class="switchRow">
+      <div><div class="sl">庄家自摸 ×2</div><div class="sd">开：胡家是庄家时，三家都付双倍</div></div>
+      <button class="sw" id="bankSw"></button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="cardTitle">其他</div>
+    <button class="big ghost" id="btnReset" style="color:#a62f24;border-color:#d8b7b0">恢复默认设置（不动记分）</button>
+  </div>
+  <div class="vfoot">数据只保存在本机浏览器里。删除浏览器数据会清空记录。</div>
+</section>
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <button data-go="settle" class="on"><span class="ic">🀄</span>结算</button>
+  <button data-go="ledger"><span class="ic">📋</span>记分</button>
+  <button data-go="rules"><span class="ic">📖</span>规则</button>
+  <button data-go="settings"><span class="ic">⚙️</span>设置</button>
+</nav>
+
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ==================== 状态 ==================== */
+const LS_KEY = 'csmj.v1';
+const BIG_TYPES = ['碰碰胡','将将胡','清一色','七小对','豪华七小对','全求人','杠上开花','海底胡','抢杠胡','天胡','地胡'];
+
+function defaults(){
+  return {
+    players: ['东家','南家','西家','北家'],
+    rate: 0.5,
+    small: [2,4,8],
+    big: [8,16,24,32],
+    bigStep: 8,
+    kongMing: 1,
+    kongAn: 2,
+    bankDouble: false
+  };
+}
+function loadState(){
+  try{
+    const j = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if(j && j.settings && j.session && Array.isArray(j.session.hands)){
+      j.settings = Object.assign(defaults(), j.settings);
+      return j;
+    }
+  }catch(e){}
+  return { settings: defaults(), session: { startedAt: Date.now(), hands: [] } };
+}
+let S = loadState();
+let form = { winner:null, kind:'small', value:null, helperSel:new Set(), extraBig:[], kongs:{ming:[0,0,0,0],an:[0,0,0,0]}, banker:false };
+let lastResult = '';
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ==================== 小工具 ==================== */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function parseNumList(str, fallback){
+  const arr = String(str||'').split(/[,，、\s]+/).map(x=>parseFloat(x)).filter(x=>isFinite(x)&&x>0);
+  return arr.length ? arr : fallback.slice();
+}
+function round2(n){ return Math.round(n*100)/100; }
+function fmtPts(n){ n = round2(n); return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')); }
+function fmtYuan(n, signed){
+  n = round2(n);
+  let s = (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/,'').replace(/\.$/,''));
+  if(signed && n > 0) s = '+' + s;
+  if(n < 0) s = '-' + String(s).replace(/^-/,'');
+  return s + '元';
+}
+function playerName(i){ return (S.settings.players[i] || '').trim() || (i+1) + '号'; }
+function rateLabel(){
+  const r = S.settings.rate;
+  const rTxt = (r === 0.5) ? '5毛/分' : (fmtPts(r) + '元/分');
+  return rTxt + ' · 只准自摸 · 三家全付';
+}
+function bigList(){ return S.settings.big.concat(form.extraBig); }
+function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove('on'), 2600);
+}
+
+/* ==================== 计算 ==================== */
+function settlePay(){
+  // 胡家自摸：每家应付的分（庄家×2 可选）
+  let pay = (form.value || 0);
+  if(S.settings.bankDouble && form.banker) pay *= 2;
+  return pay;
+}
+function computeDeltas(withWinner){
+  const d = [0,0,0,0];
+  const pay = settlePay();
+  if(withWinner && form.winner !== null && pay > 0){
+    for(let i=0;i<4;i++) if(i !== form.winner) d[i] -= pay;
+    d[form.winner] += pay * 3;
+  }
+  for(let p=0;p<4;p++){
+    const g = form.kongs.ming[p]*S.settings.kongMing + form.kongs.an[p]*S.settings.kongAn;
+    if(g > 0){
+      for(let i=0;i<4;i++) if(i !== p) d[i] -= g;
+      d[p] += g * 3;
+    }
+  }
+  return d;
+}
+function hasAnyKong(){
+  for(let p=0;p<4;p++) if(form.kongs.ming[p] + form.kongs.an[p] > 0) return true;
+  return false;
+}
+function totals(){
+  const t = [0,0,0,0];
+  for(const h of S.session.hands) for(let i=0;i<4;i++) t[i] += h.deltas[i];
+  return t;
+}
+
+/* ==================== 渲染：结算页 ==================== */
+function renderWinnerBtns(){
+  $('#winnerBtns').innerHTML = S.settings.players.map((_,i)=>
+    `<button class="pbtn${form.winner===i?' on':''}" data-winner="${i}">${esc(playerName(i))}</button>`
+  ).join('');
+}
+function renderKindSeg(){
+  $$('#kindSeg button').forEach(b=>b.classList.toggle('on', b.dataset.kind === form.kind));
+  $('#helperBox').style.display = form.kind === 'big' ? '' : 'none';
+}
+function renderTiers(){
+  const vals = form.kind === 'small' ? S.settings.small.slice() : bigList();
+  const per = v => fmtYuan(v * S.settings.rate);
+  let html = vals.map(v=>
+    `<button class="chip${form.value===v?' on':''}" data-tier="${v}"><b>${fmtPts(v)}分</b><span>每家 ${per(v)}</span></button>`
+  ).join('');
+  if(form.kind === 'big'){
+    const step = S.settings.bigStep;
+    html += `<button class="chip mini" data-addstep="1">＋${fmtPts(step)}分</button>`;
+  }
+  $('#tierChips').innerHTML = html;
+  // 小提示
+  if(form.kind === 'small'){
+    $('#tierNote').textContent = '小胡：按你们桌上算的档位直接点（2 / 4 / 8 分）。';
+  }else{
+    const n = form.helperSel.size;
+    $('#tierNote').textContent = n ? `已按番型叠加 ${n} 个大胡 → ${fmtPts(n*S.settings.big[0])} 分` :
+      '大胡：1 个 8 分，每多 1 个大胡加 8 分（算加法）。也可直接点上面的分值。';
+  }
+}
+function renderBigTypeChips(){
+  const base = S.settings.big[0];
+  $('#bigTypeChips').innerHTML = BIG_TYPES.map(t=>
+    `<button class="chip mini${form.helperSel.has(t)?' on':''}" data-btype="${esc(t)}">${esc(t)}</button>`
+  ).join('');
+  const n = form.helperSel.size;
+  $('#helperNote').innerHTML = n ?
+    `已选 <b>${n}</b> 个大胡：${fmtPts(base)}分 × ${n} = <b>${fmtPts(n*base)} 分</b>（每家 ${fmtYuan(n*base*S.settings.rate)}）` :
+    '勾选本局凑成的大胡番型，自动按加法累计。';
+}
+function renderKongs(){
+  $('#kongRows').innerHTML = S.settings.players.map((_,p)=>
+    `<div class="kongRow">
+      <span class="kname">${esc(playerName(p))}</span>
+      <div class="stepper${form.kongs.ming[p]?' has':''}">
+        <button data-kong="ming" data-p="${p}" data-d="-1">−</button><b>${form.kongs.ming[p]}</b><button data-kong="ming" data-p="${p}" data-d="1">＋</button>
+      </div>
+      <div class="stepper${form.kongs.an[p]?' has':''}">
+        <button data-kong="an" data-p="${p}" data-d="-1">−</button><b>${form.kongs.an[p]}</b><button data-kong="an" data-p="${p}" data-d="1">＋</button>
+      </div>
+    </div>`
+  ).join('');
+  const km = S.settings.kongMing, ka = S.settings.kongAn;
+  $('#kongNote').textContent = `明杠每家给 ${fmtPts(km)}分（${fmtYuan(km*S.settings.rate)}），暗杠每家给 ${fmtPts(ka)}分（${fmtYuan(ka*S.settings.rate)}）。`;
+}
+function renderBankerCard(){
+  const show = !!S.settings.bankDouble;
+  $('#bankerCard').style.display = show ? '' : 'none';
+  $('#bankerSw').classList.toggle('on', form.banker);
+}
+function buildPreview(){
+  const el = $('#preview');
+  const parts = [];
+  if(form.winner !== null && form.value){
+    const pay = settlePay();
+    const double = (S.settings.bankDouble && form.banker) ? '（庄×2）' : '';
+    parts.push(`<span class="hl">${esc(playerName(form.winner))}</span> 自摸 ${form.kind==='small'?'小胡':'大胡'} ${fmtPts(form.value)}分${double} → 每家付 <span class="hl">${fmtYuan(pay*S.settings.rate)}</span>，共收 <span class="hl">${fmtYuan(pay*3*S.settings.rate)}</span>`);
+  }else{
+    parts.push('选好上面的胡家和分值，这里会先帮你算一遍。');
+  }
+  if(hasAnyKong()){
+    const kongBits = [];
+    for(let p=0;p<4;p++){
+      const m = form.kongs.ming[p], a = form.kongs.an[p];
+      if(m||a) kongBits.push(`${esc(playerName(p))} ${m?('明杠'+m):''}${a?(m?'、':'')+('暗杠'+a):''}`);
+    }
+    parts.push('杠：' + kongBits.join('；'));
+  }
+  if(lastResult) parts.push(lastResult);
+  el.innerHTML = parts.join('<br>');
+  $('#btnSettle').disabled = !(form.winner !== null && (form.value || 0) > 0);
+}
+function renderSettle(){
+  renderWinnerBtns(); renderKindSeg(); renderTiers(); renderBigTypeChips();
+  renderKongs(); renderBankerCard(); buildPreview();
+}
+
+/* ==================== 渲染：记分页 ==================== */
+function renderLedger(){
+  const t = totals();
+  $('#totalsGrid').innerHTML = S.settings.players.map((_,i)=>{
+    const yuan = t[i] * S.settings.rate;
+    const cls = t[i] > 0 ? 'pos' : (t[i] < 0 ? 'neg' : 'zero');
+    const sign = t[i] > 0 ? '+' : '';
+    return `<div class="tcard">
+      <div><div class="tname">${esc(playerName(i))}</div><div class="tpts">${sign}${fmtPts(t[i])} 分</div></div>
+      <div class="tamt ${cls}">${t[i]===0 ? '0元' : (t[i]>0?'+':'') + fmtYuan(yuan)}</div>
+    </div>`;
+  }).join('');
+  const n = S.session.hands.length;
+  $('#metaInfo').textContent = `已打 ${n} 局 · ${rateLabel()}`;
+  const list = S.session.hands.slice().reverse().slice(0, 60).map((h, ridx)=>{
+    const idx = S.session.hands.length - ridx;
+    const title = h.draw ? `#${idx} ${h.time} · 流局` :
+      `#${idx} ${h.time} · ${esc(playerName(h.winner))} 自摸${h.kind==='small'?'小胡':'大胡'} ${fmtPts(h.value)}分${h.banker?'（庄×2）':''}`;
+    const kongTxt = h.kongTxt ? `<div class="hcSub">杠：${esc(h.kongTxt)}</div>` : '';
+    const deltaTxt = S.settings.players.map((_,i)=>{
+      const d = h.deltas[i];
+      if(!d) return null;
+      const c = d>0?'pos':(d<0?'neg':'');
+      return `<span class="${c}">${esc(playerName(i))} ${d>0?'+':''}${fmtYuan(d*S.settings.rate)}</span>`;
+    }).filter(Boolean).join('　');
+    return `<div class="handCard"><div class="hcTop"><span>${title}</span><span class="hcSub">${S.settings.rate ? '' : ''}</span></div>${kongTxt}<div class="hcSub">${deltaTxt || '无输赢'}</div></div>`;
+  }).join('');
+  $('#handList').innerHTML = list || '<div class="handCard"><div class="hcSub">还没有记录。打一局后到「结算」记账。</div></div>';
+  $('#ledgerFoot').textContent = n > 60 ? `仅显示最近 60 局，共 ${n} 局。` : '';
+}
+
+/* ==================== 渲染：规则页 ==================== */
+function renderRules(){
+  const st = S.settings;
+  const M = v => `${fmtPts(v)}分（${fmtYuan(v*st.rate)}）`;
+  $('#ruleSummary').innerHTML = [
+    `<li>底分：<b>${st.rate === 0.5 ? '5 毛/分' : fmtPts(st.rate)+' 元/分'}</b>；<b>只准自摸</b>，输的三家全付。</li>`,
+    `<li>小胡档位：<b>${st.small.map(fmtPts).join(' / ')} 分</b>（每家 ${st.small.map(v=>fmtYuan(v*st.rate)).join(' / ')}）。</li>`,
+    `<li>大胡档位：<b>${st.big.map(fmtPts).join(' / ')} 分</b>（每家 ${st.big.map(v=>fmtYuan(v*st.rate)).join(' / ')}）；每多一个大胡 <b>+${fmtPts(st.bigStep)} 分</b>（算加法）。</li>`,
+    `<li>杠：明杠每家 ${M(st.kongMing)}，暗杠每家 ${M(st.kongAn)}，逐个累计、一杠到底。</li>`,
+    `<li>庄家自摸 ×2：<b>${st.bankDouble?'开':'关'}</b>。</li>`
+  ].join('');
+  const rows = [];
+  const all = st.small.map(v=>['小胡',v]).concat(st.big.map(v=>['大胡',v]));
+  all.push(['大胡·+1个', st.big[st.big.length-1] + st.bigStep]);
+  all.push(['明杠', st.kongMing], ['暗杠', st.kongAn]);
+  $('#moneyTable').innerHTML =
+    '<tr><th>项目</th><th>分</th><th>每家付</th><th>三家共</th></tr>' +
+    all.map(([k,v])=>`<tr><td>${k}</td><td class="v">${fmtPts(v)}</td><td class="y">${fmtYuan(v*st.rate)}</td><td>${fmtYuan(v*3*st.rate)}</td></tr>`).join('');
+}
+
+/* ==================== 渲染：设置页 ==================== */
+let settingsRenderedOnce = false;
+function renderSettings(){
+  $('#nameInputs').innerHTML = S.settings.players.map((v,i)=>
+    `<input class="setInput" style="flex:1 1 40%" data-name="${i}" value="${esc(v)}" maxlength="8" placeholder="${i+1}号">`
+  ).join('');
+  $('#rateInput').value = S.settings.rate;
+  $('#smallInput').value = S.settings.small.join(',');
+  $('#bigInput').value = S.settings.big.join(',');
+  $('#bigStepInput').value = S.settings.bigStep;
+  $('#kongMingInput').value = S.settings.kongMing;
+  $('#kongAnInput').value = S.settings.kongAn;
+  $('#bankSw').classList.toggle('on', !!S.settings.bankDouble);
+}
+function renderHeader(){ $('#rateLabel').textContent = rateLabel(); }
+
+function renderAll(){ renderHeader(); renderSettle(); renderLedger(); renderRules(); renderSettings(); }
+
+/* ==================== 结算弹窗 ==================== */
+function openOverlay(html){ $('#sheet').innerHTML = html; $('#overlay').classList.add('on'); }
+function closeOverlay(){ $('#overlay').classList.remove('on'); }
+
+function confirmSettle(isDraw){
+  const deltas = computeDeltas(!isDraw);
+  const pay = settlePay();
+  const rows = S.settings.players.map((_,i)=>{
+    const d = deltas[i]; const yuan = d * S.settings.rate;
+    const cls = d>0?'pos':(d<0?'neg':'zero');
+    return `<div class="mrow"><div><div class="mname">${esc(playerName(i))}</div><div class="mpts">${d>0?'+':''}${fmtPts(d)} 分</div></div>
+      <div class="mamt ${cls}">${d===0?'不变':(d>0?'+':'')+fmtYuan(yuan)}</div></div>`;
+  }).join('');
+  let detail = '';
+  if(isDraw){ detail = '流局：不产生胡分' + (hasAnyKong() ? '，仅结算杠分。' : '，也没有杠分，无输赢。'); }
+  else{
+    detail = `胡家：${esc(playerName(form.winner))} 自摸${form.kind==='small'?'小胡':'大胡'} ${fmtPts(form.value)}分`
+      + (S.settings.bankDouble && form.banker ? '（庄家×2）' : '')
+      + `\n每家付 ${fmtPts(pay)}分 = ${fmtYuan(pay*S.settings.rate)}，三家合计 ${fmtYuan(pay*3*S.settings.rate)}`;
+    if(hasAnyKong()){
+      const bits = [];
+      for(let p=0;p<4;p++){
+        const m=form.kongs.ming[p], a=form.kongs.an[p];
+        if(m||a) bits.push(`${playerName(p)}：${m?('明杠×'+m+' '):''}${a?('暗杠×'+a):''}`.trim());
+      }
+      detail += '\n杠：' + bits.join('；');
+    }
+  }
+  const sum = deltas.reduce((a,b)=>a+b,0);
+  const okTxt = isDraw ? '确认流局' : '确认入账';
+  openOverlay(`
+    <h3>${isDraw?'流局结算':'本局结算'}</h3>
+    ${rows}
+    <div class="detail">${detail}\n合计核对：${fmtPts(sum)} 分（必须为 0）</div>
+    <div class="btnRow"><button class="btnCancel" id="ovCancel">取消</button><button class="btnOk" id="ovOk">${okTxt}</button></div>`);
+  $('#ovCancel').onclick = closeOverlay;
+  $('#ovOk').onclick = ()=>{
+    const kongTxtArr = [];
+    for(let p=0;p<4;p++){
+      const m=form.kongs.ming[p], a=form.kongs.an[p];
+      if(m||a) kongTxtArr.push(`${playerName(p)}${m?(' 明杠'+m):''}${a?(' 暗杠'+a):''}`);
+    }
+    const rec = {
+      time: nowHM(),
+      draw: !!isDraw,
+      winner: isDraw ? null : form.winner,
+      kind: form.kind,
+      value: isDraw ? 0 : form.value,
+      banker: !!(S.settings.bankDouble && form.banker),
+      kongs: JSON.parse(JSON.stringify(form.kongs)),
+      kongTxt: kongTxtArr.join('；'),
+      deltas
+    };
+    S.session.hands.push(rec);
+    save();
+    const parts = S.settings.players.map((_,i)=>`${playerName(i)} ${deltas[i]>0?'+':''}${fmtYuan(deltas[i]*S.settings.rate)}`).join('，');
+    lastResult = `✓ 已入账：${parts}`;
+    // 重置表单
+    form.winner = null; form.value = null; form.helperSel = new Set(); form.extraBig = [];
+    form.kongs = {ming:[0,0,0,0],an:[0,0,0,0]}; form.banker = false;
+    closeOverlay();
+    renderAll();
+    toast(isDraw ? '已记录：流局' : '已入账 ✓');
+  };
+}
+
+/* ==================== 事件 ==================== */
+document.addEventListener('click', (e)=>{
+  const t = e.target.closest('button');
+  if(!t) return;
+  // tab 切换
+  if(t.dataset.go){ $$('#tabbar button').forEach(b=>b.classList.toggle('on', b===t)); $$('section[data-tab]').forEach(s=>s.classList.toggle('on', s.dataset.tab===t.dataset.go)); window.scrollTo(0,0); return; }
+  // 胡家
+  if(t.dataset.winner !== undefined){ form.winner = parseInt(t.dataset.winner,10); renderSettle(); return; }
+  // 胡型
+  if(t.dataset.kind){ form.kind = t.dataset.kind; form.value = null; form.helperSel = new Set(); renderSettle(); return; }
+  // 分值
+  if(t.dataset.tier !== undefined){ form.value = parseFloat(t.dataset.tier); form.helperSel = new Set(); renderSettle(); return; }
+  if(t.dataset.addstep){
+    const step = S.settings.bigStep;
+    const next = Math.max.apply(null, bigList()) + step;
+    form.extraBig.push(next);
+    form.value = next;
+    form.helperSel = new Set();
+    renderSettle(); return;
+  }
+  // 大胡番型
+  if(t.dataset.btype){
+    const k = t.dataset.btype;
+    if(form.helperSel.has(k)) form.helperSel.delete(k); else form.helperSel.add(k);
+    const n = form.helperSel.size;
+    if(n > 0){
+      const base = S.settings.big[0], step = S.settings.bigStep;
+      const want = base + (n-1)*step;
+      // 确保档位芯片里能看到它
+      const known = bigList();
+      if(known.indexOf(want) < 0){ for(let v = known[known.length-1] + step; v <= want; v += step) form.extraBig.push(v); }
+      form.value = want;
+    }else{ form.value = null; }
+    renderSettle(); return;
+  }
+  // 杠加减
+  if(t.dataset.kong){
+    const p = parseInt(t.dataset.p,10), d = parseInt(t.dataset.d,10);
+    const arr = form.kongs[t.dataset.kong];
+    arr[p] = Math.min(4, Math.max(0, arr[p] + d));
+    renderSettle(); return;
+  }
+  // 庄家
+  if(t.id === 'bankerSw'){ form.banker = !form.banker; renderSettle(); return; }
+  // 结算 / 流局
+  if(t.id === 'btnSettle'){ if(!t.disabled) confirmSettle(false); return; }
+  if(t.id === 'btnDraw'){ confirmSettle(true); return; }
+  // 记分操作
+  if(t.id === 'btnUndo'){
+    if(!S.session.hands.length){ toast('没有可撤销的记录'); return; }
+    S.session.hands.pop(); save(); lastResult = ''; renderAll(); toast('已撤销上一局');
+    return;
+  }
+  if(t.id === 'btnClear'){
+    openOverlay(`<h3>结束清账</h3>
+      <div class="detail">将清空全部对局记录，四家归零。\n建议先点「复制小结」把账存一份。</div>
+      <div class="btnRow"><button class="btnCancel" id="ovCancel">取消</button><button class="btnOk" id="ovOk">清空记录</button></div>`);
+    $('#ovCancel').onclick = closeOverlay;
+    $('#ovOk').onclick = ()=>{ S.session = { startedAt: Date.now(), hands: [] }; save(); lastResult = ''; closeOverlay(); renderAll(); toast('已清账，全部归零'); };
+    return;
+  }
+  if(t.id === 'btnCopy'){ copySummary(); return; }
+  if(t.id === 'btnReset'){
+    S.settings = defaults(); save(); renderAll(); toast('设置已恢复默认'); return;
+  }
+});
+// 遮罩点击关闭
+$('#overlay').addEventListener('click', (e)=>{ if(e.target === $('#overlay')) closeOverlay(); });
+
+/* 设置输入 */
+function bindSettings(){
+  document.addEventListener('input', (e)=>{
+    const el = e.target;
+    if(el.dataset.name !== undefined){
+      S.settings.players[parseInt(el.dataset.name,10)] = el.value.trim() || (parseInt(el.dataset.name,10)+1)+'号';
+      save(); renderHeader(); renderWinnerBtns(); renderKongs(); renderLedger();
+      return;
+    }
+    if(el.id === 'rateInput'){ const v = parseFloat(el.value); if(v > 0){ S.settings.rate = round2(v); save(); renderHeader(); renderTiers(); renderLedger(); renderRules(); } return; }
+    if(el.id === 'smallInput'){ S.settings.small = parseNumList(el.value, defaults().small); save(); renderTiers(); renderRules(); return; }
+    if(el.id === 'bigInput'){ S.settings.big = parseNumList(el.value, defaults().big).sort((a,b)=>a-b); save(); renderTiers(); renderRules(); return; }
+    if(el.id === 'bigStepInput'){ const v = parseFloat(el.value); if(v > 0){ S.settings.bigStep = v; save(); renderTiers(); renderRules(); } return; }
+    if(el.id === 'kongMingInput'){ const v = parseFloat(el.value); if(isFinite(v) && v >= 0){ S.settings.kongMing = v; save(); renderRules(); renderKongs(); } return; }
+    if(el.id === 'kongAnInput'){ const v = parseFloat(el.value); if(isFinite(v) && v >= 0){ S.settings.kongAn = v; save(); renderRules(); renderKongs(); } return; }
+  });
+}
+// 庄家开关在设置页
+document.addEventListener('click', (e)=>{
+  if(e.target.closest('#bankSw')){ S.settings.bankDouble = !S.settings.bankDouble; save(); $('#bankSw').classList.toggle('on', S.settings.bankDouble); renderSettle(); renderRules(); }
+}, true);
+
+function copySummary(){
+  const t = totals();
+  const n = S.session.hands.length;
+  const d = new Date();
+  const lines = [];
+  lines.push(`【长沙麻将记账】${d.getMonth()+1}月${d.getDate()}日 ${rateLabel()}`);
+  lines.push(`共 ${n} 局`);
+  S.settings.players.forEach((_,i)=>{
+    const cls = t[i] > 0 ? '赢' : (t[i] < 0 ? '输' : '平');
+    lines.push(`${playerName(i)}：${t[i]>0?'+':''}${fmtYuan(t[i]*S.settings.rate)}（${cls}${fmtPts(Math.abs(t[i]))}分）`);
+  });
+  const last = S.session.hands[S.session.hands.length-1];
+  if(last){
+    lines.push(last.draw ? `最近：流局` : `最近：#${n} ${playerName(last.winner)} 自摸${last.kind==='small'?'小胡':'大胡'} ${fmtPts(last.value)}分${last.kongTxt?('，'+last.kongTxt):''}`);
+  }
+  lines.push('—— 长沙麻将算分器');
+  const text = lines.join('\n');
+  const done = ()=>toast('小结已复制，可粘贴到群里');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  }else{ fallbackCopy(text, done); }
+}
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); cb(); }catch(e){ toast('复制失败，请长按选择'); }
+  document.body.removeChild(ta);
+}
+
+/* ==================== 启动 ==================== */
+bindSettings();
+renderAll();
+if('serviceWorker' in navigator && /\.github\.io$/.test(location.hostname)){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

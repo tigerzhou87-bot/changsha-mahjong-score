@@ -1,0 +1,16 @@
+{
+  "name": "长沙麻将算分器",
+  "short_name": "麻将算分",
+  "description": "只准自摸 · 5毛/分 · 大胡算加法（8/16/24/32分）",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c4231",
+  "theme_color": "#0c4231",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
