@@ -215,7 +215,7 @@ nav.tabbar button.on{color:#f3e9cf}
 <!-- ============ 结算 ============ -->
 <section data-tab="settle" class="on">
   <div class="card">
-    <div class="cardTitle">1 · 谁胡了（自摸）</div>
+    <div class="cardTitle" style="display:flex;justify-content:space-between;align-items:center">1 · 谁胡了（自摸）<button id="btnRename" style="background:none;border:none;color:#5c6b61;font-size:12.5px;font-weight:700;text-decoration:underline dotted;padding:2px 4px;font-family:inherit;cursor:pointer">✏️ 改名字</button></div>
     <div class="pgrid" id="winnerBtns"></div>
   </div>
 
@@ -364,7 +364,7 @@ const BIG_TYPES = ['碰碰胡','将将胡','清一色','七小对','豪华七小
 
 function defaults(){
   return {
-    players: ['东家','南家','西家','北家'],
+    players: ['玩家1','玩家2','玩家3','玩家4'],
     rate: 0.5,
     small: [2,4,8],
     big: [8,16,24,32],
@@ -718,6 +718,21 @@ document.addEventListener('click', (e)=>{
   }
   // 庄家
   if(t.id === 'bankerSw'){ form.banker = !form.banker; renderSettle(); return; }
+  // 改名字
+  if(t.id === 'btnRename'){
+    openOverlay(`<h3>改成你们的名字</h3>
+      <div class="setRow" id="renameInputs" style="flex-direction:column;gap:8px">
+        ${S.settings.players.map((v,i)=>`<input class="setInput" data-rn="${i}" value="${esc(v)}" maxlength="8" placeholder="玩家${i+1}">`).join('')}
+      </div>
+      <div class="hint" style="margin-top:8px">改一次就一直在，存在这台手机里（四个人顺序随便，对应第1~4个按钮）。</div>
+      <div class="btnRow"><button class="btnCancel" id="ovCancel">取消</button><button class="btnOk" id="ovOk">保存名字</button></div>`);
+    $('#ovCancel').onclick = closeOverlay;
+    $('#ovOk').onclick = ()=>{
+      $$('#renameInputs input').forEach((inp,i)=>{ const v = inp.value.trim(); S.settings.players[i] = v || ('玩家'+(i+1)); });
+      save(); closeOverlay(); renderAll(); toast('名字已保存，一直在用');
+    };
+    return;
+  }
   // 结算 / 流局
   if(t.id === 'btnSettle'){ if(!t.disabled) confirmSettle(false); return; }
   if(t.id === 'btnDraw'){ confirmSettle(true); return; }
